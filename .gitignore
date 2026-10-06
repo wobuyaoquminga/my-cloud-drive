@@ -1,0 +1,14 @@
+.secrets/
+管理员账号.json
+work/
+*.pem
+*.key
+*.env
+*.db
+*.sql
+*.img
+*.log
+*.tar.gz
+*.zip
+__pycache__/
+public-check-result.json
