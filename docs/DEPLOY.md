@@ -107,6 +107,14 @@ sudo systemctl start cloudreve
 
 以上安装命令应在仓库根目录执行。备份文件保留在原目录供回滚；新二进制由 `install` 设置为 root 所有、权限 755。Nginx 模板已将 `/manage` 映射到该页面；账号设置仍走 `/admin`。若启动或页面异常，停止服务并将备份二进制恢复到原路径后启动。补丁文件为 `patches/cloudreve-admin-content.patch`，补丁授权见 `patches/LICENSE-GPL-3.0`；它遵循 GPL-3.0，不属于 MIT 部署脚本授权范围。
 
+后台入口还需从 Cloudreve 的离线缓存导航中排除，否则已有网盘缓存的浏览器可能显示“页面不存在”。独立站点执行：
+
+```sh
+sudo python3 deploy/fix-worker.py
+```
+
+共用站点用 `--nginx-site /path/to/site.conf` 指定配置。如果其他应用已通过 Nginx 提供 `/sw.js`，还须用 `--worker-path /path/to/existing-worker.js` 指定现有 worker；脚本会保留其已有排除规则，增加 `/manage` 和 `/branding/` 排除，并备份原文件。浏览器刷新时安装更新，处于后台地址的旧缓存页面会自动重新加载。脚本适用于当前 Cloudreve 4.19.1 worker，结构不匹配时拒绝修改。
+
 权限检查脚本默认只执行检查，测试时会创建并清理两个账号：
 
 ```sh
