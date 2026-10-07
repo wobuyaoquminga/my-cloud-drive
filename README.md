@@ -10,11 +10,14 @@
 
 - 邮箱与密码注册、图片验证码、用户登录。
 - 文件和文件夹上传下载、分享、回收站及基础在线预览。
-- 用户默认只能看到自己的文件；容量共用不等于文件公开共用。
+- 普通用户只能编辑自己的文件；管理员可在 `/manage` 管理全站文件，账号设置仍在 `/admin`。
+- 支持 UTF-8 文本在线编辑（单文件最大 2 MiB）；其他文件可下载、改名和删除。
 - 修改站点名称与图标，使用 Nginx 提供 HTTPS。
 - 独立系统用户和 MySQL 数据库账号，systemd 自启动与进程资源限制。
 
 本仓库提供部署脚本及配置，不包含 Cloudreve 本体源代码或二进制文件。安装脚本下载官方 **4.19.1** 发布包并检查 SHA-256。脚本支持 Ubuntu 24.04、Linux x86_64，需要已有 MySQL 8、Nginx、HTTPS 证书和 sudo/root 权限。
+
+v1.1.0 另提供可选的 Cloudreve 管理后台内容编辑补丁。安装器仍安装官方二进制；补丁需在电脑上用 Python 3、Git 和 Go 1.26.5 单独构建，再按部署说明手动替换服务端程序。补丁基于 GPL-3.0，和本仓库 MIT 部署脚本许可不同。
 
 ## 容量与当前限制
 
@@ -38,5 +41,6 @@ sudo python3 deploy/install.py
 - `docs/images/`：已部署实例的真实界面截图。
 - `VALIDATION.md`：实际验证结果与范围。
 - `SECURITY.md`：凭据与运行数据的处理方式。
+- `patches/`、`deploy/build-admin.py`：可选 Cloudreve 管理后台补丁及本地构建工具。
 
 部署脚本采用 MIT 许可证；Cloudreve 本体遵循其 [GPL-3.0 许可证](https://github.com/cloudreve/cloudreve/blob/master/LICENSE)，详见 [NOTICE.md](NOTICE.md)。

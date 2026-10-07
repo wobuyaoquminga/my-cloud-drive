@@ -10,7 +10,7 @@ if site.exists():
     raise SystemExit('Cloudreve site already exists; refusing to overwrite.')
 branding = pathlib.Path('/opt/cloudreve/branding')
 branding.mkdir(exist_ok=True)
-for name in ['logo.svg', 'icon.svg']:
+for name in ['logo.svg', 'icon.svg', 'admin.html']:
     (branding / name).write_bytes((home / name).read_bytes())
 body = pathlib.Path('/var/lib/cloudreve/nginx-body')
 body.mkdir(mode=0o700, exist_ok=True)

@@ -1,5 +1,6 @@
 """Configure the private instance through an SSH tunnel on localhost:15212."""
 import argparse
+import base64
 import os
 import json
 import pathlib
@@ -47,7 +48,7 @@ assert login['user']['group']['name'] == 'Admin', 'Initial account is not the ad
 settings = {
     'siteName': args.name, 'siteTitle': args.name, 'siteDes': '',
     'siteURL': args.site_url,
-    'register_enabled': '1' if args.open_registration else '0', 'reg_captcha': '1', 'forget_captcha': '1', 'email_active': '0',
+    'register_enabled': '1' if args.open_registration else '0', 'default_group': '2', 'reg_captcha': '1', 'forget_captcha': '1', 'email_active': '0',
     'site_logo': '/branding/logo.svg', 'site_logo_light': '/branding/logo.svg',
     'pwa_small_icon': '/branding/icon.svg', 'defaultTheme': '#2563eb',
     'temp_path': '/var/lib/cloudreve/temp',
@@ -60,9 +61,20 @@ for group_id, name in [(1, 'Admin'), (2, '普通用户')]:
     group = api('GET', f'/admin/group/{group_id}')
     group['max_storage'] = 10 * 1024**3
     group['name'] = name
+    permissions = bytearray(base64.b64decode(group['permissions']))
+    if group_id == 1:
+        permissions[0] |= 1
+    else:
+        permissions[0] &= ~1
+    group['permissions'] = base64.b64encode(permissions).decode()
     if group_id == 2:
         group['settings']['trash_retention'] = 24 * 3600
     api('PUT', f'/admin/group/{group_id}', {'group': group})
+anonymous = api('GET', '/admin/group/3')
+permissions = bytearray(base64.b64decode(anonymous['permissions']))
+permissions[0] &= ~(1 | 128)
+anonymous['permissions'] = base64.b64encode(permissions).decode()
+api('PUT', '/admin/group/3', {'group': anonymous})
 policy = api('GET', '/admin/policy/1')
 policy['name'] = '共用 10 GB 存储池'
 policy['max_size'] = 10 * 1024**3

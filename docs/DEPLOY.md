@@ -30,6 +30,8 @@ sudo python3 deploy/install.py --archive /path/to/cloudreve_4.19.1_linux_amd64.t
 
 安装器不提供自动失败回滚。失败后先检查已创建的用户、挂载和数据库，保留日志，不要反复执行或手动格式化现有存储。
 
+`install.py` 安装的是 Cloudreve 官方二进制。可选的后台内容编辑功能需要另外构建并手动替换二进制，详见下文。
+
 ## 2. 初始化管理员
 
 在运行初始化脚本的电脑上建立 SSH 隧道，并保持连接：
@@ -68,7 +70,7 @@ sudo journalctl -u cloudreve -n 60 --no-pager
 df -h /var/lib/cloudreve /
 ```
 
-在浏览器检查注册验证码、管理员登录和上传下载。管理员通过 `/admin` 进入后台；登录后修改初始密码。
+在浏览器检查注册验证码、管理员登录和上传下载。账号设置和原有管理功能位于 `/admin`；管理员可从 `/manage` 打开全站文件管理，普通用户只能管理自己的文件。在线文本编辑仅接受 UTF-8 文本且单文件最大 2 MiB；其他文件可下载、改名或删除。
 
 使用 Node.js 20 或以上版本可运行公网检查：
 
@@ -84,6 +86,34 @@ node deploy/public-check.mjs
 ```
 
 检查工具使用 `.secrets/admin.json`，创建并永久删除自己的 1 MiB 验证文件，不更改注册配置。若管理员密码已修改，请同步更新该本机私密文件。它不会忽略 HTTPS 证书错误。
+
+### 可选：构建并安装管理员内容编辑补丁
+
+此补丁基于 Cloudreve 4.19.1，上游提交 `a8becb9f5b226024c83230bc52857c04966e2c30`。构建在自己的电脑上完成，需要 Python 3、Git 和 Go 1.26.5；不需要 Node.js 前端构建。可用官方发布包作为构建输入：
+
+```sh
+python deploy/build-admin.py --archive /path/to/cloudreve_4.19.1_linux_amd64.tar.gz
+```
+
+省略 `--archive` 时，脚本会下载官方发布包并校验 SHA-256。它从该包提取未修改的前端资源，并克隆、校验和补丁化上游源码；不需要 Node.js 前端构建。构建结果为 `work/cloudreve-admin`（Linux amd64）。服务器上的安装器仍只安装官方二进制；先备份并停止服务，再手动替换二进制并放置后台页面：
+
+```sh
+sudo systemctl stop cloudreve
+sudo cp /opt/cloudreve/cloudreve /opt/cloudreve/cloudreve.official.bak
+sudo install -o root -g root -m 755 work/cloudreve-admin /opt/cloudreve/cloudreve
+sudo install -o root -g root -m 644 deploy/admin.html /opt/cloudreve/branding/admin.html
+sudo systemctl start cloudreve
+```
+
+以上安装命令应在仓库根目录执行。备份文件保留在原目录供回滚；新二进制由 `install` 设置为 root 所有、权限 755。Nginx 模板已将 `/manage` 映射到该页面；账号设置仍走 `/admin`。若启动或页面异常，停止服务并将备份二进制恢复到原路径后启动。补丁文件为 `patches/cloudreve-admin-content.patch`，补丁授权见 `patches/LICENSE-GPL-3.0`；它遵循 GPL-3.0，不属于 MIT 部署脚本授权范围。
+
+权限检查脚本默认只执行检查，测试时会创建并清理两个账号：
+
+```sh
+CLOUDREVE_URL=https://pan.example.com node deploy/permissions-check.mjs
+```
+
+`--apply` 会修改注册默认用户组及匿名分享下载等权限，不建议日常运行。
 
 ## 5. 备份与维护
 

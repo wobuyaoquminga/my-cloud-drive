@@ -12,3 +12,4 @@ work/
 *.zip
 __pycache__/
 public-check-result.json
+permissions-check-result.json
