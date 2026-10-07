@@ -23,7 +23,8 @@ blocks = '\n'.join(chat_block.replace('location / {', 'location ' + route + ' {'
 cloud = '''
     client_max_body_size 64m;
     client_body_temp_path /var/lib/cloudreve/nginx-body 1 2;
-    location = /manage { alias /opt/cloudreve/branding/admin.html; default_type text/html; }
+    location = /manage { return 302 /f/admin; }
+    location = /f/admin { alias /opt/cloudreve/branding/admin.html; default_type text/html; add_header Cache-Control "no-store" always; }
     location /branding/ { alias /opt/cloudreve/branding/; }
     location = /api/v4/session/token {
         limit_req zone=cloudreve_auth burst=10 nodelay;
